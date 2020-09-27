@@ -176,7 +176,7 @@ download_package_history() {
         get_old_repo_chart_urls $chart | while read url; do curl -sSLO $url; done
         echo "✅ Finished package history download for $old_repo_name/$chart"
     done
-    cd -
+    cd - 1> /dev/null
 }
 
 # See https://github.com/helm/charts/blob/master/test/repo-sync.sh#L57
