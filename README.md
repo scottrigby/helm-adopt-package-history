@@ -1,6 +1,6 @@
 # helm-adopt-package-history
 
-⚠️ This tool helps with one possible resolution to the `stable` and `incubator` charts repo pacakge history garbage collection planned for Nov 2020. Keep an eye out for forthcoming updates on the [Helm Blog](https://helm.sh/blog/).
+⚠️ This tool helps with one possible resolution to the `stable` and `incubator` charts repo package history garbage collection planned for Nov 2020. Keep an eye out for forthcoming updates on the [Helm Blog](https://helm.sh/blog/).
 
 ## Install
 
@@ -19,10 +19,10 @@ ls -s ~/somewhere/helm-adopt-package-history /usr/local/bin/helm-adopt-package-h
 `helm-adopt-package-history --help`
 
 ```text
-This comand helps a distributed chart repo adopt another repo's pacakge history
+This comand helps a distributed chart repo adopt another repo's package history
 
 The goal is to make it easy for distributed Chart repo maintainers who have
-already adopted helm charts to also store chart version pacakges prior to
+already adopted helm charts to also store chart version packages prior to
 adoption.
 
 Scope: because distributed chart repo index and packages may be hosted

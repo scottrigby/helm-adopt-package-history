@@ -8,10 +8,10 @@ fi
 
 usage() {
     cat <<EOF
-This comand helps a distributed chart repo adopt another repo's pacakge history
+This comand helps a distributed chart repo adopt another repo's package history
 
 The goal is to make it easy for distributed Chart repo maintainers who have
-already adopted helm charts to also store chart version pacakges prior to
+already adopted helm charts to also store chart version packages prior to
 adoption.
 
 Scope: because distributed chart repo index and packages may be hosted
