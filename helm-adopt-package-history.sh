@@ -221,6 +221,12 @@ move_packages() {
     echo "✅ moved package history to local dir"
 }
 
+manual_review_message() {
+    echo "Reminder to manually review your local repo directory before pushing to your repo"
+    echo "See 'helm-adopt-package-history --help' for goal, scope and context"
+    echo "Thanks for contributing 🙂"
+}
+
 # Quick getops with long options.
 # To-do: convert to Go if this helper tool proves useful but buggy
 die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
@@ -269,3 +275,4 @@ temp_dir
 download_package_history
 update_index
 move_packages
+manual_review_message
