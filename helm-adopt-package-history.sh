@@ -25,7 +25,7 @@ Context for stable/incubator: If adopting from stable or incubator repos, as of
 buckets will be garbage collected. Due to global download usage, the cost of
 these buckets is too high to move package history all together to new single
 storage location. Instead, the Helm team is promoting the strategy for adopting
-distributed chart repos to also host pacakge history for the their adopted
+distributed chart repos to also host package history for the their adopted
 charts, spreading the load in a more maintainable way. For updates on stable
 chart adoption progress, see https://github.com/helm/charts/issues/21103.
 
@@ -52,7 +52,7 @@ Flags:
     -f, --force-update
         Optional. Passes '--force-update' option to 'helm repo add'
     -h, --help
-        help for adopt-old-packages
+        help message
 EOF
 }
 
