@@ -118,16 +118,47 @@ temp_dir() {
     export temp_dir=$(mktemp -d)
 }
 
-get_new_repo_chart_list() {
-    cat $HELM_CACHE_HOME/repository/$new_repo_name-charts.txt
+get_download_list() {
+    if [ -n "${include_charts:-}" ]; then
+        # Allow the specified include list
+        local download_list=$(echo $include_charts | tr , '\n')
+    else
+        # Default to all charts listed in new repo cache
+        local download_list=$(cat $HELM_CACHE_HOME/repository/$new_repo_name-charts.txt)
+    fi
+
+    # Remove any specified exclusions
+    if [ -n "${exclude_charts:-}" ]; then
+        for e in $exclude_charts; do
+            download_list=$(echo "${download_list:-}" | sed "/^$e\$/d")
+        done
+    fi
+
+    if [ -z ${download_list} ]; then
+        echo 'Something went wrong. No charts are configured for download'
+        echo "Run 'helm-adopt-package-history --help' for usage"
+        exit 1
+    fi
+
+    # Verify each chart in the list exists in the old repo cache
+    #
+    # Error if anything is not right. Users can always exclude or include
+    # lists for edge cases. The most common use case is all or most of the new
+    # charts repo list are the same names as the old repo. If users followed
+    # best practices adopting charts, they would have deprecated a chart before
+    # any renaming.
+    for check in $download_list; do
+        if ! grep -Fxq $check $HELM_CACHE_HOME/repository/$old_repo_name-charts.txt; then
+            echo "Something went wrong. $check does not exist in $old_repo_name local cache"
+            exit 1
+        fi
+    done
+
+    echo ${download_list:-}
 }
 
 get_old_repo_chart_urls() {
     local chart=$1
-    if ! grep -Fxq $chart $HELM_CACHE_HOME/repository/$old_repo_name-charts.txt; then
-        echo "Something went wrong. $chart does not exist in $old_repo_name local cache"
-        exit 1
-    fi
     # Use sed to strip out annoying yq hyphens. If converted to Go we won't need yq or this
     yq r $HELM_CACHE_HOME/repository/$old_repo_name-index.yaml entries.$chart.*.urls | sed 's/^- //'
 }
@@ -135,11 +166,11 @@ get_old_repo_chart_urls() {
 download_package_history() {
     # Let's not assume users have pushd and popd
     cd $temp_dir
-    local new_charts=$(get_new_repo_chart_list)
+    local download_charts=$(get_download_list)
     echo "Attempting package history download from $old_repo_name, for charts:"
-    echo "$new_charts" | nl
+    echo "$download_charts" | nl
     echo "To temp directory: $temp_dir"
-    for chart in $new_charts
+    for chart in $download_charts
     do
         echo "⏳ Starting package history download for $old_repo_name/$chart"
         get_old_repo_chart_urls $chart | while read url; do curl -sSLO $url; done
