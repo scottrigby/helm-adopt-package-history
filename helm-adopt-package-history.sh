@@ -228,7 +228,7 @@ if [ -z "${old_repo:-}" ] || [ -z "${new_repo:-}" ] || [ -z "${local_dir:-}" ]; 
     [ -z "${local_dir:-}" ] && echo 'Required: [-l, --local-dir]'
     echo "Run 'helm-adopt-package-history --help' for usage"
     exit 1
-elif [ -z "$local_dir/index.yaml" ]; then
+elif [ ! -f "$local_dir/index.yaml" ]; then
     echo '[-l, --local-dir] must include a helm repo index.yaml file'
     echo "See The Chart Repsitory Guide: https://helm.sh/docs/topics/chart_repository for more info"
     exit 1
