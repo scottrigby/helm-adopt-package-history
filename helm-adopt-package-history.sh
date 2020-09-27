@@ -92,7 +92,7 @@ repo_add_update() {
 }
 
 check_cache_files() {
-    local files="$old_repo_name-index.yaml $new_repo_name-index.yaml $new_repo_name-charts.txt"
+    local files="$old_repo_name-index.yaml $old_repo_name-charts.txt $new_repo_name-index.yaml $new_repo_name-charts.txt"
     for file in $files
     do
         local path="$HELM_CACHE_HOME/repository/$file"
