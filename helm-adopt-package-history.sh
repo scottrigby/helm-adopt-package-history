@@ -109,8 +109,8 @@ extract_repo_option_values() {
     # To-do: this could be done better, but for now catches easy incorrect value
     # mistakes
     if [ -z "${old_repo_name:-}" ] || [ -z "${old_repo_url:-}" ] || [ -z "${new_repo_name:-}" ] || [ -z "${new_repo_url:-}" ]; then
-        echo 'Repo values must be in the format of NAME=URL. See --help for examples'
-        exit 1
+        echo 'Repo values must be in the format of NAME=URL. See --help for examples' >&2
+        kill -10 $PROC
     fi
 }
 
@@ -121,10 +121,10 @@ temp_dir() {
 get_download_list() {
     if [ -n "${include_charts:-}" ]; then
         # Allow the specified include list
-        local download_list=$(echo $include_charts | tr , '\n')
+        download_list=$(echo $include_charts | tr , '\n')
     else
         # Default to all charts listed in new repo cache
-        local download_list=$(cat $HELM_CACHE_HOME/repository/$new_repo_name-charts.txt)
+        download_list=$(cat $HELM_CACHE_HOME/repository/$new_repo_name-charts.txt)
     fi
 
     # Remove any specified exclusions
@@ -134,10 +134,10 @@ get_download_list() {
         done
     fi
 
-    if [ -z ${download_list} ]; then
+    if [ -z "${download_list:-}" ]; then
         echo 'Something went wrong. No charts are configured for download'
-        echo "Run 'helm-adopt-package-history --help' for usage"
-        exit 1
+        echo "Run 'helm-adopt-package-history --help' for usage" >&2
+        kill -10 $PROC
     fi
 
     # Verify each chart in the list exists in the old repo cache
@@ -149,12 +149,10 @@ get_download_list() {
     # any renaming.
     for check in $download_list; do
         if ! grep -Fxq $check $HELM_CACHE_HOME/repository/$old_repo_name-charts.txt; then
-            echo "Something went wrong. $check does not exist in $old_repo_name local cache"
-            exit 1
+            echo "Something went wrong. $check does not exist in $old_repo_name local cache" >&2
+            kill -10 $PROC
         fi
     done
-
-    echo ${download_list:-}
 }
 
 get_old_repo_chart_urls() {
@@ -164,16 +162,17 @@ get_old_repo_chart_urls() {
 }
 
 download_package_history() {
-    local download_charts=$(get_download_list)
+    get_download_list
+
     echo "Attempting package history download from $old_repo_name, for charts:"
-    echo "$download_charts" | nl
+    echo "$download_list" | nl
     echo "To temp directory: $temp_dir"
 
     # For charts progress
-    local cn=$(echo "$download_charts" | wc -l | tr -d ' ')
+    local cn=$(echo "$download_list" | wc -l | tr -d ' ')
     local ci=0
 
-    for chart in $download_charts
+    for chart in $download_list
     do
         # Increment chart index
         ci=$(($ci+1))
@@ -209,8 +208,8 @@ update_index() {
         echo "✅ updated local index"
     else
         tput cuu 1 && tput el
-        echo "❌ unable to update local index"
-        exit 1
+        echo "❌ unable to update local index" >&2
+        kill -10 $PROC
     fi
 }
 
@@ -265,6 +264,9 @@ elif [ ! -f "$local_dir/index.yaml" ]; then
     echo "See The Chart Repsitory Guide: https://helm.sh/docs/topics/chart_repository for more info"
     exit 1
 fi
+
+trap "exit 1" 10
+PROC="$$"
 
 requirements
 helm_cache_home
