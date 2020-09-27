@@ -82,7 +82,7 @@ helm_cache_home() {
 }
 
 # Ensures current metadata for old and new repos are cached locally
-repo_commands() {
+repo_add_update() {
     if [ -z "${skip_repo_commands:-}" ]; then
         [ "${force_update:-}" == "true" ] && local force_option='--force-update'
         helm repo add $old_repo_name $old_repo_url ${force_option:-}
@@ -206,7 +206,7 @@ fi
 requirements
 helm_cache_home
 extract_repo_option_values
-repo_commands
+repo_add_update
 check_cache_files
 temp_dir
 download_package_history
