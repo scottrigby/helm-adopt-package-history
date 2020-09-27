@@ -17,13 +17,13 @@ adoption.
 Scope: because distributed chart repo index and packages may be hosted
 in various ways (object storage, GitHub pages, or any other HTTP server), this
 command only helps find and download the package history of charts you have
-already adopted, and updates your local repo index for manual review. It does
-not perform any commits or attempt to upload to your chart repository.
+already adopted, and updates your local repo directory for manual review. It
+does not perform any commits or attempt to upload to your chart repository.
 
 Context for stable/incubator: If adopting from stable or incubator repos, as of
 13 November 2020, these will be deprecated and the Google sponsored GCP storage
 buckets will be garbage collected. Due to global download usage, the cost of
-these buckets is too high to move package history all togetehr to new single
+these buckets is too high to move package history all together to new single
 storage location. Instead, the Helm team is promoting the strategy for adopting
 distributed chart repos to also host pacakge history for the their adopted
 charts, spreading the load in a more maintainable way. For updates on stable
@@ -164,35 +164,61 @@ get_old_repo_chart_urls() {
 }
 
 download_package_history() {
-    # Let's not assume users have pushd and popd
-    cd $temp_dir
     local download_charts=$(get_download_list)
     echo "Attempting package history download from $old_repo_name, for charts:"
     echo "$download_charts" | nl
     echo "To temp directory: $temp_dir"
+
+    # For charts progress
+    local cn=$(echo "$download_charts" | wc -l | tr -d ' ')
+    local ci=0
+
     for chart in $download_charts
     do
-        echo "⏳ Starting package history download for $old_repo_name/$chart"
-        get_old_repo_chart_urls $chart | while read url; do curl -sSLO $url; done
-        echo "✅ Finished package history download for $old_repo_name/$chart"
+        # Increment chart index
+        ci=$(($ci+1))
+        local cm="⏳ downloading packages for $old_repo_name/$chart ($ci of $cn)"
+        # For per-chart package progress
+        local urls=$(get_old_repo_chart_urls $chart)
+        local pn=$(echo "$urls" | wc -l | tr -d ' ')
+        local pi=0
+
+        # Empty newline for progress to overwrite
+        echo
+        for url in $urls
+        do
+            # Increment versions total
+            local pi=$(($pi+1))
+            local f=$(basename $url)
+            local v=$(basename $f .tgz | cut -d'-' -f2)
+            tput cuu 1 && tput el
+            echo "$cm. package $v ($pi of $pn)"
+            curl -SsLo $temp_dir/$f $url
+        done
+        tput cuu 1 && tput el
+        echo "✅ downloaded $pi packages for $old_repo_name/$chart"
     done
-    cd - 1> /dev/null
 }
 
 # See https://github.com/helm/charts/blob/master/test/repo-sync.sh#L57
 update_index() {
+    echo "⏳ updating local index"
     if helm repo index --url "$new_repo_url" --merge $local_dir/index.yaml "$temp_dir"; then
         mv -f "$temp_dir/index.yaml" $local_dir/index.yaml
+        tput cuu 1 && tput el
+        echo "✅ updated local index"
     else
-        echo "Unable to update local index"
+        tput cuu 1 && tput el
+        echo "❌ unable to update local index"
         exit 1
     fi
 }
 
 move_packages() {
-    echo "⏳ Starting package history move to local dir"
+    echo "⏳ moving package history to local dir"
     mv $temp_dir/*.tgz $local_dir
-    echo "✅ Finished package history move to local dir"
+    tput cuu 1 && tput el
+    echo "✅ moved package history to local dir"
 }
 
 # Quick getops with long options.
