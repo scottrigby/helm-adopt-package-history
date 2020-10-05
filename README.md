@@ -11,7 +11,7 @@ This is a work in progress 🤓
 
 ```console
 git clone git@github.com:scottrigby/helm-adopt-package-history.git ~/somewhere/helm-adopt-package-history
-ls -s ~/somewhere/helm-adopt-package-history /usr/local/bin/helm-adopt-package-history
+ls -s ~/somewhere/helm-adopt-package-history/helm-adopt-package-history.sh /usr/local/bin/helm-adopt-package-history
 ```
 
 ## Usage
