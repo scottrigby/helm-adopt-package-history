@@ -236,7 +236,8 @@ update_index() {
 move_packages() {
     echo "⏳ moving package history to local package dir"
     mkdir -p $local_package_dir
-    mv $download_dir/*.tgz $local_package_dir
+    # exec because the file list can be too large for mv. Example: stable repo
+    find $download_dir/ -name "*.tgz" -exec mv {} $local_package_dir \;
     tput cuu 1 && tput el
     echo "✅ moved package history to local package dir"
 }
