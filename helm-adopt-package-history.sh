@@ -43,6 +43,8 @@ Flags:
         New chart repo (example: foo=http://charts.foo.bar)
     -l, --local-dir
         Local directory containing chart repo index file and packages
+    -p, --package-subdir
+        Optional package sub-directory
     -i, --include-charts
         Optional. Comma-separated list of charts to include (default: all charts listed in new repo index)
     -e, --exclude-charts
@@ -118,6 +120,24 @@ temp_dir() {
     export temp_dir=$(mktemp -d)
 }
 
+download_dir() {
+    local d=$temp_dir
+    if [ -n "${package_subdir:-}" ]; then
+        d=$temp_dir/$package_subdir
+        mkdir -p $d
+    fi
+    export download_dir=$d
+}
+
+local_package_dir() {
+    local d=$local_dir
+    if [ -n "${package_subdir:-}" ]; then
+        d=$local_dir/$package_subdir
+        mkdir -p $d
+    fi
+    export local_package_dir=$d
+}
+
 get_download_list() {
     if [ -n "${include_charts:-}" ]; then
         # Allow the specified include list
@@ -166,7 +186,7 @@ download_package_history() {
 
     echo "Attempting package history download from $old_repo_name, for charts:"
     echo "$download_list" | nl
-    echo "To temp directory: $temp_dir"
+    echo "To temp directory: $download_dir"
 
     # For charts progress
     local cn=$(echo "$download_list" | wc -l | tr -d ' ')
@@ -192,7 +212,7 @@ download_package_history() {
             local v=$(basename $f .tgz | cut -d'-' -f2)
             tput cuu 1 && tput el
             echo "$cm. package $v ($pi of $pn)"
-            curl -SsLo $temp_dir/$f $url
+            curl -SsLo $download_dir/$f $url
         done
         tput cuu 1 && tput el
         echo "✅ downloaded $pi packages for $old_repo_name/$chart"
@@ -214,10 +234,11 @@ update_index() {
 }
 
 move_packages() {
-    echo "⏳ moving package history to local dir"
-    mv $temp_dir/*.tgz $local_dir
+    echo "⏳ moving package history to local package dir"
+    mkdir -p $local_package_dir
+    mv $download_dir/*.tgz $local_package_dir
     tput cuu 1 && tput el
-    echo "✅ moved package history to local dir"
+    echo "✅ moved package history to local package dir"
 }
 
 manual_review_message() {
@@ -230,7 +251,7 @@ manual_review_message() {
 # To-do: convert to Go if this helper tool proves useful but buggy
 die() { echo "$*" >&2; exit 2; }  # complain to STDERR and exit with error
 needs_arg() { if [ -z "$OPTARG" ]; then die "No arg for --$OPT option"; fi; }
-while getopts hfso:n:l:i:e:-: OPT; do
+while getopts hfspo:n:l:i:e:-: OPT; do
   # support long options: https://stackoverflow.com/a/28466267/519360
   if [ "$OPT" = "-" ]; then   # long option: reformulate OPT and OPTARG
     OPT="${OPTARG%%=*}"       # extract long option name
@@ -241,6 +262,7 @@ while getopts hfso:n:l:i:e:-: OPT; do
     o | old-repo )              needs_arg; old_repo="$OPTARG" ;;
     n | new-repo )              needs_arg; new_repo="$OPTARG" ;;
     l | local-dir )             needs_arg; local_dir="$OPTARG" ;;
+    p | package-subdir )        needs_arg; package_subdir="$OPTARG" ;;
     i | include-charts )        needs_arg; include_charts="$OPTARG" ;;
     e | exclude-charts )        needs_arg; exclude_charts="$OPTARG" ;;
     h | help )                  usage && exit 0 ;;
@@ -274,7 +296,9 @@ extract_repo_option_values
 repo_add_update
 check_cache_files
 temp_dir
+download_dir
 download_package_history
+local_package_dir
 update_index
 move_packages
 manual_review_message
