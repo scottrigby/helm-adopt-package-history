@@ -60,7 +60,7 @@ EOF
 
 requirements() {
     for c in helm yq; do
-        if ! command -v helm &> /dev/null; then
+        if ! command -v $c &> /dev/null; then
             echo "$c could not be found"
             exit 1
         fi
