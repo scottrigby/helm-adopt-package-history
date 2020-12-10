@@ -212,6 +212,9 @@ download_package_history() {
             local v=$(basename $f .tgz | cut -d'-' -f2)
             tput cuu 1 && tput el
             echo "$cm. package $v ($pi of $pn)"
+            if [[ $url != *"://"* ]]; then
+                url="${old_repo_url}/${url}"
+            fi
             curl -SsLo $download_dir/$f $url
         done
         tput cuu 1 && tput el
