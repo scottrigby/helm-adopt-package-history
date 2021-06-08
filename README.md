@@ -42,7 +42,7 @@ chart adoption progress, see https://github.com/helm/charts/issues/21103.
 
 Requires:
     helm >= 3.3.4
-    yq
+    yq 3.x
 
 Usage:
     helm-adopt-package-history [flags]
