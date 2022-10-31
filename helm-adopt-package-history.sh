@@ -220,6 +220,9 @@ download_package_history() {
                 # Increment download total
                 pi=$(($pi+1))
                 echo "$cm. package $v ($pi of $pn)"
+                if [[ $url != *"://"* ]]; then
+                    url="${old_repo_url}/${url}"
+                fi
                 curl -SsLo "$download_dir/$f" $url
             fi
         done
