@@ -196,26 +196,35 @@ download_package_history() {
     do
         # Increment chart index
         ci=$(($ci+1))
-        local cm="⏳ downloading packages for $old_repo_name/$chart ($ci of $cn)"
+        local cm="⏳ starting packages for $old_repo_name/$chart ($ci of $cn)"
         # For per-chart package progress
         local urls=$(get_old_repo_chart_urls $chart)
         local pn=$(echo "$urls" | wc -l | tr -d ' ')
         local pi=0
+        local sk=0
 
         # Empty newline for progress to overwrite
         echo
         for url in $urls
         do
-            # Increment versions total
-            local pi=$(($pi+1))
             local f=$(basename $url)
             local v=$(basename $f .tgz | cut -d'-' -f2)
+            # Only download missing packages
             tput cuu 1 && tput el
-            echo "$cm. package $v ($pi of $pn)"
-            curl -SsLo $download_dir/$f $url
+            # To-do: update final count message to show how many skipped vs downloaded
+            if [ -f $local_package_dir/$f ]; then
+                # Increment skip total
+                sk=$(($pi+1))
+                echo "$cm. 🚫 package $v exists ($pi of $pn)"
+            else
+                # Increment download total
+                pi=$(($pi+1))
+                echo "$cm. package $v ($pi of $pn)"
+                curl -SsLo "$download_dir/$f" $url
+            fi
         done
         tput cuu 1 && tput el
-        echo "✅ downloaded $pi packages for $old_repo_name/$chart"
+        echo "✅ finished packages for $old_repo_name/$chart ($ci of $cn): $pi downloaded, $sk skipped."
     done
 }
 
@@ -298,8 +307,8 @@ repo_add_update
 check_cache_files
 temp_dir
 download_dir
-download_package_history
 local_package_dir
+download_package_history
 update_index
 move_packages
 manual_review_message
